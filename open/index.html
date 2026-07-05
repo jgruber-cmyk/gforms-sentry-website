@@ -141,24 +141,27 @@
 
     <script>
         window.onload = function() {
-            // 1. Hole die Google-Forms URL aus den Parametern (?url=...)
-            const urlParams = new URLSearchParams(window.location.search);
-            const targetUrl = urlParams.get('url');
+            // 1. Hole die Google-Forms URL (entweder aus dem # oder dem ?url= Parameter)
+            let targetUrl = "";
+            if (window.location.hash && window.location.hash.length > 1) {
+                targetUrl = window.location.hash.substring(1); // Liest alles hinter dem #
+            } else {
+                const urlParams = new URLSearchParams(window.location.search);
+                targetUrl = urlParams.get('url');
+            }
             
-            if (!targetUrl) {
-                document.getElementById('status-text').innerText = "Hinweis: Kein gültiger Prüfungs-Link übergeben. Bitte öffne den Link direkt aus Google Classroom.";
+            if (!targetUrl || !targetUrl.startsWith('http')) {
+                document.getElementById('status-text').innerText = "Hinweis: Kein gültiger Prüfungs-Link übergeben.";
                 document.getElementById('loading-spinner').style.display = 'none';
                 return;
             }
 
-            // 2. DER ANDROID CHEAT-CODE (Intent Link):
-            // Das ist die absolut stabilste Methode für Android-Browser. Sie zwingt das System,
-            // nach einer App mit exakt diesem Paketnamen zu suchen.
-            // HINWEIS: Falls du deine ApplicationID in Flutter geändert hast, passe hinten "com.example.gforms_sentry" an!
-            const currentSearch = window.location.search;
-            const androidIntentUrl = `intent://gforms-sentry.com/open${currentSearch}#Intent;scheme=https;package=com.example.gforms_sentry;end;`;
+            // 2. Wir bauen den Android-Intent kugelsicher zusammen
+            // Wir encodieren die Ziel-URL, damit Flutter sie fehlerfrei einlesen kann
+            const intentParam = "?url=" + encodeURIComponent(targetUrl);
+            const androidIntentUrl = `intent://gforms-sentry.com/open${intentParam}#Intent;scheme=https;package=com.example.gforms_sentry;end;`;
             
-            // Setze die Adresse vorsorglich auf den Button
+            // Setze die Adresse auf den Button
             const button = document.getElementById('fallback-button');
             button.href = androidIntentUrl;
 
@@ -168,8 +171,6 @@
             }, 600);
 
             // 4. SICHERHEITS-FALLBACK (Nach 2,5 Sekunden)
-            // Falls das Handy die App NICHT automatisch geöffnet hat, blenden wir den Spinner aus
-            // und zeigen dem Schüler den großen Button zur manuellen Freigabe.
             setTimeout(() => {
                 document.getElementById('loading-spinner').style.display = 'none';
                 document.getElementById('status-text').innerText = "Dein Browser blockiert die automatische Weiterleitung. Bitte klicke auf den Button, um die App zu öffnen:";
