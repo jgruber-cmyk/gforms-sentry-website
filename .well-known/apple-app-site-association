@@ -1,0 +1,11 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "HIER_STEHT_DEIN_APPLE_TEAM_ID.com.deinname.gformsSentry",
+        "paths": [ "/open/*" ]
+      }
+    ]
+  }
+}
