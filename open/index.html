@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>gForms-Sentry | Prüfungsmodus</title>
+    <style>
+        /* Minimalistisches & professionelles Dark-Theme */
+        :root {
+            --bg-color: #0f172a;       /* Edles Schiefer-Dunkelblau */
+            --card-bg: #1e293b;        /* Etwas helleres Blau-Grau für die Box */
+            --text-main: #f8fafc;      /* Nahezu Weiß für perfekte Lesbarkeit */
+            --text-muted: #94a3b8;     /* Muted Grey für sekundäre Infos */
+            --accent: #4f46e5;         /* Modernes Indigo-Blau für den Fokus */
+            --accent-hover: #4338ca;   /* Dunkleres Indigo beim Drücken */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 420px;
+            width: 100%;
+            background: var(--card-bg);
+            padding: 40px 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Ein dezentes, sicheres Schild-Icon als Logo */
+        .logo-icon {
+            width: 64px;
+            height: 64px;
+            background: var(--accent);
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+            box-shadow: 0 0 25px rgba(79, 70, 229, 0.4);
+        }
+
+        .logo-icon svg {
+            width: 32px;
+            height: 32px;
+            fill: white;
+        }
+
+        h1 {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+
+        p {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+
+        /* Moderner, minimalistischer Lade-Kringel */
+        .spinner {
+            width: 44px;
+            height: 44px;
+            border: 3.5px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--accent);
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Stylischer Button, falls die Automatik blockiert wird */
+        .btn {
+            display: none; /* Standardmäßig unsichtbar */
+            width: 100%;
+            background-color: var(--accent);
+            color: white;
+            text-decoration: none;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-weight: 500;
+            font-size: 15px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn:hover {
+            background-color: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        .footer {
+            margin-top: 32px;
+            font-size: 11px;
+            color: #64748b;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="logo-icon">
+            <svg viewBox="0 0 24 24">
+                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+            </svg>
+        </div>
+        
+        <h1>Prüfungsmodus wird gestartet</h1>
+        <p id="status-text">gForms-Sentry öffnet die Aufgabe. Bitte hab einen kurzen Moment Geduld...</p>
+        
+        <div class="spinner" id="loading-spinner"></div>
+        
+        <a href="#" id="fallback-button" class="btn">Prüfung manuell starten</a>
+        
+        <div class="footer">
+            🔒 SCHÜLER-MODUS AKTIV &bull; GFORMS-SENTRY
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            // 1. Hole die Google-Forms URL aus den Parametern (?url=...)
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetUrl = urlParams.get('url');
+            
+            if (!targetUrl) {
+                document.getElementById('status-text').innerText = "Hinweis: Kein gültiger Prüfungs-Link übergeben. Bitte öffne den Link direkt aus Google Classroom.";
+                document.getElementById('loading-spinner').style.display = 'none';
+                return;
+            }
+
+            // 2. DER ANDROID CHEAT-CODE (Intent Link):
+            // Das ist die absolut stabilste Methode für Android-Browser. Sie zwingt das System,
+            // nach einer App mit exakt diesem Paketnamen zu suchen.
+            // HINWEIS: Falls du deine ApplicationID in Flutter geändert hast, passe hinten "com.example.gforms_sentry" an!
+            const currentSearch = window.location.search;
+            const androidIntentUrl = `intent://gforms-sentry.com/open${currentSearch}#Intent;scheme=https;package=com.example.gforms_sentry;end;`;
+            
+            // Setze die Adresse vorsorglich auf den Button
+            const button = document.getElementById('fallback-button');
+            button.href = androidIntentUrl;
+
+            // 3. AUTOMATISCHER STARTVERSUCH (Nach 600 Millisekunden)
+            setTimeout(() => {
+                window.location.href = androidIntentUrl;
+            }, 600);
+
+            // 4. SICHERHEITS-FALLBACK (Nach 2,5 Sekunden)
+            // Falls das Handy die App NICHT automatisch geöffnet hat, blenden wir den Spinner aus
+            // und zeigen dem Schüler den großen Button zur manuellen Freigabe.
+            setTimeout(() => {
+                document.getElementById('loading-spinner').style.display = 'none';
+                document.getElementById('status-text').innerText = "Dein Browser blockiert die automatische Weiterleitung. Bitte klicke auf den Button, um die App zu öffnen:";
+                button.style.display = 'block';
+            }, 2500);
+        };
+    </script>
+
+</body>
+</html>
