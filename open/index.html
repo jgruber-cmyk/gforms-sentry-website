@@ -143,38 +143,42 @@
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
             
-            // Wir holen uns NUR die ID aus dem Link
+            // Wir holen uns NUR die ID aus dem Link (und optional die E-Mail)
             const formId = urlParams.get('id');
-            const userEmail = urlParams.get('email'); // Für deine E-Mail-Logik
+            const userEmail = urlParams.get('email'); 
             
+            // Wenn keine ID da ist, bricht das Skript sauber ab
             if (!formId) {
-                document.getElementById('status-text').innerText = "Hinweis: Keine gültige Prüfungs-ID gefunden.";
+                document.getElementById('status-text').innerText = "Hinweis: Keine gültige Prüfungs-ID gefunden. Bitte öffne den Link direkt aus Google Classroom.";
                 document.getElementById('loading-spinner').style.display = 'none';
                 return;
             }
 
-            // HIER bauen wir die Google Forms URL heimlich wieder zusammen!
+            // HIER bauen wir die Google Forms URL komplett neu und klinisch rein zusammen!
             let fullFormsUrl = "https://docs.google.com/forms/d/e/" + formId + "/viewform";
             
-            // Falls eine E-Mail im Link war, hängen wir sie für die App wieder dran
+            // Falls eine E-Mail übergeben wurde, hängen wir sie sauber an
             if (userEmail) {
-                fullFormsUrl += "?Email=" + userEmail; // oder &Email= je nach Forms-Struktur
+                fullFormsUrl += "?Email=" + encodeURIComponent(userEmail);
             }
 
-            // Wir gaukeln der App vor, als wäre der klassische ?url= Link geklickt worden
-            // So musst du in Flutter keinen einzigen Codeblock ändern!
-            const appUrlParam = "?url=" + encodeURIComponent(fullFormsUrl);
-            const androidIntentUrl = `intent://gforms-sentry.com/open${appUrlParam}#Intent;scheme=https;package=com.example.gforms_sentry;end;`;
+            // Wir verpacken NUR diese blitzsaubere URL in den Parameter für die App.
+            // Jeglicher "AccountChooser"-Müll von Google Classroom wird hier ignoriert.
+            const cleanAppQuery = "?url=" + encodeURIComponent(fullFormsUrl);
             
+            // Der Intent-Link, der an Android gefunkt wird
+            const androidIntentUrl = `intent://gforms-sentry.com/open${cleanAppQuery}#Intent;scheme=https;package=com.example.gforms_sentry;end;`;
+            
+            // Button für den manuellen Fallback vorbereiten
             const button = document.getElementById('fallback-button');
             button.href = androidIntentUrl;
 
-            // App sofort öffnen
+            // App nach kurzem Warten automatisch öffnen
             setTimeout(() => {
                 window.location.href = androidIntentUrl;
             }, 600);
 
-            // Sicherheitsnetz
+            // Sicherheitsnetz (Fallback-Button anzeigen), falls der Browser blockiert
             setTimeout(() => {
                 document.getElementById('loading-spinner').style.display = 'none';
                 document.getElementById('status-text').innerText = "Dein Browser blockiert die automatische Weiterleitung. Bitte klicke auf den Button, um die App zu öffnen:";
