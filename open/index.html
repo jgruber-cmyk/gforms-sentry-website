@@ -141,36 +141,40 @@
 
     <script>
         window.onload = function() {
-            // 1. Hole die Google-Forms URL (entweder aus dem # oder dem ?url= Parameter)
-            let targetUrl = "";
-            if (window.location.hash && window.location.hash.length > 1) {
-                targetUrl = window.location.hash.substring(1); // Liest alles hinter dem #
-            } else {
-                const urlParams = new URLSearchParams(window.location.search);
-                targetUrl = urlParams.get('url');
-            }
+            const urlParams = new URLSearchParams(window.location.search);
             
-            if (!targetUrl || !targetUrl.startsWith('http')) {
-                document.getElementById('status-text').innerText = "Hinweis: Kein gültiger Prüfungs-Link übergeben.";
+            // Wir holen uns NUR die ID aus dem Link
+            const formId = urlParams.get('id');
+            const userEmail = urlParams.get('email'); // Für deine E-Mail-Logik
+            
+            if (!formId) {
+                document.getElementById('status-text').innerText = "Hinweis: Keine gültige Prüfungs-ID gefunden.";
                 document.getElementById('loading-spinner').style.display = 'none';
                 return;
             }
 
-            // 2. Wir bauen den Android-Intent kugelsicher zusammen
-            // Wir encodieren die Ziel-URL, damit Flutter sie fehlerfrei einlesen kann
-            const intentParam = "?url=" + encodeURIComponent(targetUrl);
-            const androidIntentUrl = `intent://gforms-sentry.com/open${intentParam}#Intent;scheme=https;package=com.example.gforms_sentry;end;`;
+            // HIER bauen wir die Google Forms URL heimlich wieder zusammen!
+            let fullFormsUrl = "https://docs.google.com/forms/d/e/" + formId + "/viewform";
             
-            // Setze die Adresse auf den Button
+            // Falls eine E-Mail im Link war, hängen wir sie für die App wieder dran
+            if (userEmail) {
+                fullFormsUrl += "?Email=" + userEmail; // oder &Email= je nach Forms-Struktur
+            }
+
+            // Wir gaukeln der App vor, als wäre der klassische ?url= Link geklickt worden
+            // So musst du in Flutter keinen einzigen Codeblock ändern!
+            const appUrlParam = "?url=" + encodeURIComponent(fullFormsUrl);
+            const androidIntentUrl = `intent://gforms-sentry.com/open${appUrlParam}#Intent;scheme=https;package=com.example.gforms_sentry;end;`;
+            
             const button = document.getElementById('fallback-button');
             button.href = androidIntentUrl;
 
-            // 3. AUTOMATISCHER STARTVERSUCH (Nach 600 Millisekunden)
+            // App sofort öffnen
             setTimeout(() => {
                 window.location.href = androidIntentUrl;
             }, 600);
 
-            // 4. SICHERHEITS-FALLBACK (Nach 2,5 Sekunden)
+            // Sicherheitsnetz
             setTimeout(() => {
                 document.getElementById('loading-spinner').style.display = 'none';
                 document.getElementById('status-text').innerText = "Dein Browser blockiert die automatische Weiterleitung. Bitte klicke auf den Button, um die App zu öffnen:";
