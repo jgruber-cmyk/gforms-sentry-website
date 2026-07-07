@@ -1,18 +1,18 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>gForms-Sentry | Prüfungsmodus</title>
+    <title>gForms-Sentry | Exam Mode</title>
     <style>
-        /* Minimalistisches & professionelles Dark-Theme */
+        /* Minimalist & professional dark theme */
         :root {
-            --bg-color: #0f172a;       /* Edles Schiefer-Dunkelblau */
-            --card-bg: #1e293b;        /* Etwas helleres Blau-Grau für die Box */
-            --text-main: #f8fafc;      /* Nahezu Weiß für perfekte Lesbarkeit */
-            --text-muted: #94a3b8;     /* Muted Grey für sekundäre Infos */
-            --accent: #4f46e5;         /* Modernes Indigo-Blau für den Fokus */
-            --accent-hover: #4338ca;   /* Dunkleres Indigo beim Drücken */
+            --bg-color: #0f172a;       /* Slate dark blue */
+            --card-bg: #1e293b;        /* Lighter blue-gray for the card */
+            --text-main: #f8fafc;      /* Crisp white for readability */
+            --text-muted: #94a3b8;     /* Muted gray for secondary info */
+            --accent: #4f46e5;         /* Modern indigo for focus */
+            --accent-hover: #4338ca;   /* Darker indigo on press */
         }
 
         * {
@@ -42,7 +42,7 @@
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
         }
 
-        /* Ein dezentes, sicheres Schild-Icon als Logo */
+        /* Subtle secure shield icon logo */
         .logo-icon {
             width: 64px;
             height: 64px;
@@ -75,7 +75,7 @@
             margin-bottom: 32px;
         }
 
-        /* Moderner, minimalistischer Lade-Kringel */
+        /* Modern minimalist spinner */
         .spinner {
             width: 44px;
             height: 44px;
@@ -90,9 +90,9 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Stylischer Button, falls die Automatik blockiert wird */
+        /* Action button for manual fallback */
         .btn {
-            display: none; /* Standardmäßig unsichtbar */
+            display: none; /* Hidden by default */
             width: 100%;
             background-color: var(--accent);
             color: white;
@@ -127,65 +127,56 @@
             </svg>
         </div>
         
-        <h1>Prüfungsmodus wird gestartet</h1>
-        <p id="status-text">gForms-Sentry öffnet die Aufgabe. Bitte hab einen kurzen Moment Geduld...</p>
+        <h1>Launching Exam Mode</h1>
+        <p id="status-text">gForms-Sentry is opening your assignment. Please hold on a moment...</p>
         
         <div class="spinner" id="loading-spinner"></div>
         
-        <a href="#" id="fallback-button" class="btn">Prüfung manuell starten</a>
+        <a href="#" id="fallback-button" class="btn">Open in gForms-Sentry App</a>
         
         <div class="footer">
-            🔒 SCHÜLER-MODUS AKTIV &bull; GFORMS-SENTRY
+            🔒 STUDENT MODE ACTIVE &bull; GFORMS-SENTRY
         </div>
     </div>
 
     <script>
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
+            const rawInput = urlParams.get('id');
             
-            // Wir holen uns NUR die ID aus dem Link (und optional die E-Mail)
-            const formId = urlParams.get('id');
-            const userEmail = urlParams.get('email'); 
-            
-            // Wenn keine ID da ist, bricht das Skript sauber ab
-            if (!formId) {
-                document.getElementById('status-text').innerText = "Hinweis: Keine gültige Prüfungs-ID gefunden. Bitte öffne den Link direkt aus Google Classroom.";
+            // Intelligent extractor: Filters out the core Google Forms ID from any input
+            function extractPureFormId(input) {
+                if (!input) return null;
+                // Case 1: Input is a complete Google Forms URL
+                const match = input.match(/\/d\/e\/([a-zA-Z0-9-_]+)/) || input.match(/\/d\/([a-zA-Z0-9-_]+)/);
+                if (match) return match[1];
+                // Case 2: Input is already the raw ID (sanity check on structure without slashes)
+                if (input.length >= 20 && !input.includes('/')) return input;
+                return null;
+            }
+
+            const cleanFormId = extractPureFormId(rawInput);
+
+            // Halt execution if no valid ID can be resolved
+            if (!cleanFormId) {
+                document.getElementById('status-text').innerText = "Notice: No valid exam ID found. Please open the link directly from Google Classroom or scan your teacher's QR code.";
                 document.getElementById('loading-spinner').style.display = 'none';
                 return;
             }
 
-            // HIER bauen wir die Google Forms URL komplett neu und klinisch rein zusammen!
-            let fullFormsUrl = "https://docs.google.com/forms/d/e/" + formId + "/viewform";
+            // Standardized Deep-Link structure consumed by the Flutter application
+            const universalDeepLink = `intent://gforms-sentry.com/open?id=${cleanFormId}#Intent;scheme=https;package=com.example.gforms_sentry;end;`;
             
-            // Falls eine E-Mail übergeben wurde, hängen wir sie sauber an
-            if (userEmail) {
-                fullFormsUrl += "?Email=" + encodeURIComponent(userEmail);
-            }
-
-            // Wir verpacken NUR diese blitzsaubere URL in den Parameter für die App.
-            // Jeglicher "AccountChooser"-Müll von Google Classroom wird hier ignoriert.
-            const cleanAppQuery = "?url=" + encodeURIComponent(fullFormsUrl);
-            
-            // Der Intent-Link, der an Android gefunkt wird
-            const androidIntentUrl = `intent://gforms-sentry.com/open${cleanAppQuery}#Intent;scheme=https;package=com.example.gforms_sentry;end;`;
-            
-            // Button für den manuellen Fallback vorbereiten
+            // Prepare fallback action button
             const button = document.getElementById('fallback-button');
-            button.href = androidIntentUrl;
+            button.href = universalDeepLink;
 
-            // App nach kurzem Warten automatisch öffnen
+            // Trigger the Android Intent redirect automatically after a short delay
             setTimeout(() => {
-                window.location.href = androidIntentUrl;
-            }, 600);
+                window.location.href = universalDeepLink;
+            }, 500);
 
-            // Sicherheitsnetz (Fallback-Button anzeigen), falls der Browser blockiert
+            // Safety net: Display manual launch option if automatic hook is blocked by browser policies
             setTimeout(() => {
                 document.getElementById('loading-spinner').style.display = 'none';
-                document.getElementById('status-text').innerText = "Dein Browser blockiert die automatische Weiterleitung. Bitte klicke auf den Button, um die App zu öffnen:";
-                button.style.display = 'block';
-            }, 2500);
-        };
-    </script>
-
-</body>
-</html>
+                document.getElementById('status-text').innerText = "If the gForms-Sentry app didn't open automatically, please click the button
