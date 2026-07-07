@@ -179,4 +179,11 @@
             // Safety net: Display manual launch option if automatic hook is blocked by browser policies
             setTimeout(() => {
                 document.getElementById('loading-spinner').style.display = 'none';
-                document.getElementById('status-text').innerText = "If the gForms-Sentry app didn't open automatically, please click the button
+                document.getElementById('status-text').innerText = "If the gForms-Sentry app didn't open automatically, please click the button below to launch your exam:";
+                button.style.display = 'block';
+            }, 2500);
+        };
+    </script>
+
+</body>
+</html>
