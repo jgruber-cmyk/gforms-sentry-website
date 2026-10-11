@@ -2,10 +2,10 @@
   "relation": ["delegate_permission/common.handle_all_urls"],
   "target": {
     "namespace": "android_app",
-    "package_name": "com.example.gforms_sentry",
+    "package_name": "com.gformssentry.app",
     "sha256_cert_fingerprints": [
       "FB:5F:AD:8A:63:66:02:C3:9E:73:63:C8:C8:59:22:31:EC:86:55:91:3A:42:6F:4F:C2:56:2A:84:58:DE:E2:EE",
-      "fb:5f:ad:8a:63:66:02:c3:9e:73:63:c8:c8:59:22:31:ec:86:55:91:3a:42:6f:4f:c2:56:2a:84:58:de:e2:ee"
+      "6A:7C:EC:FB:50:42:2D:23:7E:19:4A:60:C3:43:3A:9B:67:23:DD:F2:F5:59:B9:4B:8E:D8:6A:DC:3D:5E:B1:F2"
     ]
   }
 }]
